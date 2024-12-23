@@ -25,34 +25,16 @@ const wordExtract = async (req, res) => {
     } = await worker.recognize(image);
 
     await worker.terminate();
-    const result = formatText(text);
-
     return res.status(200).json({
       success: true,
       message: "Extract text from image successfully!",
-      text: array,
-      result,
+      text,
     });
   } catch (error) {
     return res
       .status(500)
       .json({ success: false, message: "Internal server error!" });
   }
-};
-
-const formatText = (text) => {
-  const array = text
-    .trim()
-    .split(/[,\s;|:\n\t]+/)
-    .map((item) => Number(item.trim()));
-
-  let sum = 0;
-  let errIndexArray = [];
-  array.map((item, i) =>
-    !isNaN(item) ? (sum = sum + item) : errIndexArray.push(i)
-  );
-
-  return { sum, errIndexArray, array };
 };
 
 export default wordExtract;
