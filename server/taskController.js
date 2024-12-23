@@ -24,9 +24,7 @@ export const sumOfNumbers = (req, res) => {
 
 export const createPuzzle = (req, res) => {
   try {
-    // const { text } = req.body;
-    const text =
-      "CATXZDOGYK \nRTBIRDWFIS\nMHPFISHEOQ\nNLMQPRSEZW\nORSERHORSE\nXYJUPLICAT\n";
+    const { text } = req.body;
     const array = text
       .trim()
       .split(/[,s;|:\n\t]+/)
