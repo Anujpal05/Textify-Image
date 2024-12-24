@@ -24,17 +24,40 @@ export const sumOfNumbers = (req, res) => {
 
 export const createPuzzle = (req, res) => {
   try {
-    const { text } = req.body;
+    const { text, targetLength } = req.body;
     const array = text
       .trim()
       .split(/[,s;|:\n\t]+/)
       .map((item) => item.trim());
 
-    const charArray = array.map((item, i) => item.split(""));
+    const charArray = array.map((item, i) =>
+      item
+        .split("")
+        .map((char) =>
+          char.trim() != undefined && char.trim() != null
+            ? char.trim().toString().toUpperCase()
+            : ""
+        )
+        .filter((c) => c != "")
+    );
+
+    for (let i = 0; i < charArray.length; i++) {
+      let innerArray = charArray[i];
+
+      if (innerArray.length < targetLength) {
+        while (innerArray.length < targetLength) {
+          innerArray.push("-");
+        }
+      } else if (innerArray.length > targetLength) {
+        charArray[i] = innerArray.slice(0, targetLength);
+      }
+    }
+
     return res
       .status(200)
       .json({ success: true, message: "Word Search successfully!", charArray });
   } catch (error) {
+    console.log(error);
     return res
       .status(500)
       .json({ success: false, message: "Internal server error!" });
@@ -44,6 +67,7 @@ export const createPuzzle = (req, res) => {
 export const wordSearch = (req, res) => {
   try {
     const { board, word } = req.body;
+
     if (board.length == 0 || !word) {
       return res.status(400).json({
         success: false,
@@ -52,7 +76,6 @@ export const wordSearch = (req, res) => {
     }
 
     let path = [];
-
     let rows = board.length;
     let cols = board[0].length;
     for (let i = 0; i < rows; i++) {
@@ -66,6 +89,7 @@ export const wordSearch = (req, res) => {
     }
     return res.status(404).json({ success: false, message: "Word not found!" });
   } catch (error) {
+    console.log("error");
     return res
       .status(500)
       .json({ success: false, message: "Internal server error!" });
@@ -73,37 +97,47 @@ export const wordSearch = (req, res) => {
 };
 
 const backtrack = (board, word, index, row, col, path) => {
-  if (index == word.length) {
-    return true;
-  }
+  try {
+    if (index == word.length) {
+      return true;
+    }
 
-  if (
-    row < 0 ||
-    row >= board.length ||
-    col < 0 ||
-    col >= board[0].length ||
-    board[row][col] != word.charAt(index)
-  ) {
-    return false;
-  }
+    if (!board[row][col] || !word.charAt(index)) {
+      return false;
+    }
 
-  let temp = board[row][col];
-  board[row][col] = "#";
+    if (
+      row < 0 ||
+      row >= board.length ||
+      col < 0 ||
+      col >= board[0].length ||
+      board[row][col].toLowerCase() != word.charAt(index).toLowerCase()
+    ) {
+      return false;
+    }
 
-  let found =
-    backtrack(board, word, index + 1, row, col + 1, path) ||
-    backtrack(board, word, index + 1, row + 1, col, path) ||
-    backtrack(board, word, index + 1, row - 1, col, path) ||
-    backtrack(board, word, index + 1, row, col - 1, path) ||
-    backtrack(board, word, index + 1, row - 1, col - 1, path) ||
-    backtrack(board, word, index + 1, row + 1, col + 1, path) ||
-    backtrack(board, word, index + 1, row + 1, col - 1, path) ||
-    backtrack(board, word, index + 1, row - 1, col + 1, path);
+    let temp = board[row][col];
+    board[row][col] = "#";
 
-  board[row][col] = temp;
-  if (found) {
-    console.log("row : ", row, "column :", col, "word : ", word.charAt(index));
     path.push([row, col]);
+
+    let found =
+      backtrack(board, word, index + 1, row - 1, col, path) ||
+      backtrack(board, word, index + 1, row + 1, col, path) ||
+      backtrack(board, word, index + 1, row, col - 1, path) ||
+      backtrack(board, word, index + 1, row, col + 1, path) ||
+      backtrack(board, word, index + 1, row - 1, col + 1, path) ||
+      backtrack(board, word, index + 1, row + 1, col - 1, path) ||
+      backtrack(board, word, index + 1, row - 1, col - 1, path) ||
+      backtrack(board, word, index + 1, row + 1, col + 1, path);
+
+    board[row][col] = temp;
+
+    if (!found) {
+      path.pop();
+    }
+    return found;
+  } catch (error) {
+    console.log(error);
   }
-  return found;
 };

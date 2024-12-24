@@ -1,4 +1,5 @@
 // import Tesseract from "tesseract.js";
+import sharp from "sharp";
 import { createWorker } from "tesseract.js";
 
 // Tesseract.recognize(
@@ -31,6 +32,31 @@ const wordExtract = async (req, res) => {
       text,
     });
   } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error!" });
+  }
+};
+
+export const enhanceQuality = async (req, res) => {
+  try {
+    const { image } = req.body;
+    const bash64Data = image.split(",")[1];
+
+    const imageBuffer = Buffer.from(bash64Data, "base64");
+    const qualityImg = (
+      await sharp(imageBuffer)
+        .resize(550, 650)
+        .grayscale()
+        .normalize()
+        .toBuffer()
+    ).toString("base64");
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Improve Image Quality!", qualityImg });
+  } catch (error) {
+    console.log(error);
     return res
       .status(500)
       .json({ success: false, message: "Internal server error!" });

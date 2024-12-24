@@ -8,7 +8,7 @@ import { Toaster } from 'react-hot-toast';
 function App() {
   const [ocrText, setocrText] = useState("")
   return (
-    <div className=' bg-blue-100 p-1 min-h-screen '>
+    <div className=' bg-blue-100 p-1 min-h-screen pb-20 '>
       <Toaster />
       <h1 className=' text-2xl lg:text-3xl font-semibold text-center p-5 underline'>Word Search</h1>
       <WebcamComponent ocrText={ocrText} setocrText={setocrText} />
