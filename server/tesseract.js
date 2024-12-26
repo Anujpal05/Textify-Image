@@ -46,9 +46,9 @@ export const enhanceQuality = async (req, res) => {
     const imageBuffer = Buffer.from(bash64Data, "base64");
     const qualityImg = (
       await sharp(imageBuffer)
-        .resize(550, 650)
+        .resize({ width: 550, height: 650, fit: "inside" })
         .grayscale()
-        .normalize()
+        .threshold(128)
         .toBuffer()
     ).toString("base64");
 

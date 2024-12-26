@@ -1,3 +1,7 @@
+import sharp from "sharp";
+import fs from "fs";
+import path from "path";
+
 export const sumOfNumbers = (req, res) => {
   try {
     const { text } = req.body;
@@ -139,5 +143,44 @@ const backtrack = (board, word, index, row, col, path) => {
     return found;
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const editImage = async (req, res) => {
+  try {
+    const { height, width, quality, image } = req.body;
+    const base64Data = image.split(",")[1];
+    const imageBuffer = Buffer.from(base64Data, "base64");
+
+    console.log("i am ready");
+    const outputDir = "uploads";
+
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    console.log("ya");
+    const outputFilePath = path.join(outputDir, "image.jpg");
+
+    const updatedImg = await sharp(imageBuffer)
+      .jpeg({ quality: parseInt(50, 10) })
+      .toFile(outputFilePath);
+
+    console.log(updatedImg);
+    if (fs.existsSync(outputFilePath)) {
+      console.log("file exist!");
+      return res
+        .status(200)
+        .json({
+          message: "File path sent successfully!",
+          path: outputFilePath,
+        });
+    } else {
+      console.log("File not exist!");
+      return res.status(500).json({ message: "File creation failed!" });
+    }
+  } catch (error) {
+    console.error("Compression Error:", error);
+    res.status(500).send({ message: "Image compression failed" });
   }
 };

@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { IoMdDownload } from "react-icons/io";
 
 
-const WebcamComponent = ({ ocrText, setocrText }) => {
+const WebcamComponent = ({ ocrText, setocrText, setimageInfo }) => {
   const [screenshot, setscreenshot] = useState(null);
   const [qualityImg, setqualityImg] = useState(null)
   const [facingMode, setfacingMode] = useState("user");
@@ -15,6 +15,8 @@ const WebcamComponent = ({ ocrText, setocrText }) => {
   const [type, settype] = useState("Scanner");
   const [loading, setloading] = useState(false)
   const [state, setstate] = useState(0);
+
+
   const webcamRef = useRef(null)
 
   const videoConstraints = {
@@ -23,12 +25,12 @@ const WebcamComponent = ({ ocrText, setocrText }) => {
     facingMode: facingMode
   };
 
-  useEffect(() => {
-    setscreenshot(null);
-    setqualityImg(null);
-    setocrText('')
-    setstate(0);
-  }, [type])
+  // useEffect(() => {
+  //   setscreenshot(null);
+  //   setqualityImg(null);
+  //   setocrText('')
+  //   setstate(0);
+  // }, [type])
 
 
   //Capture Image
@@ -57,6 +59,21 @@ const WebcamComponent = ({ ocrText, setocrText }) => {
   useEffect(() => {
     const fetch = async () => {
       if (screenshot) {
+        const base64Length = screenshot.length - (screenshot.indexOf(',') + 1); // Exclude the header
+        const sizeInBytes = (base64Length * (3 / 4)) - (screenshot.endsWith('=') ? 1 : 0);
+        const sizeInKB = (sizeInBytes / 1024).toFixed(2); // Convert to KB
+
+        const img = new Image();
+        img.src = screenshot;
+
+        img.onload = () => {
+          setimageInfo({
+            quality: 100,
+            width: img.width,
+            height: img.height,
+            image: screenshot
+          })
+        }
         const { data } = await axios.post(`${import.meta.env.VITE_SERVER_URL}/enhance-image`, { image: screenshot });
         setqualityImg(`data:image/jpeg;base64,${data.qualityImg}`)
       }
@@ -97,11 +114,13 @@ const WebcamComponent = ({ ocrText, setocrText }) => {
       setstate(index)
       const { data: { text } } = await axios.post(`${import.meta.env.VITE_SERVER_URL}/extract-text`, { image });
       setocrText(text)
-      setloading(false)
       toast.success("Successfully extract text!")
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      setocrText("")
       toast.error("Failed to extract text!")
+    } finally {
+      setloading(false)
     }
   }
 
@@ -120,7 +139,7 @@ const WebcamComponent = ({ ocrText, setocrText }) => {
   return (
     <div>
       <div className=' flex flex-col items-center justify-center p-2 lg:p-5'>
-        <h1 className=' font-semibold lg:text-xl text-lg'>Choose an option to upload an image : </h1>
+        <h1 className=' font-semibold lg:text-xl text-lg pb-3'>Choose an option to upload an image : </h1>
         <div className=' flex items-center gap-4 font-semibold'>
 
           <div className=' relative group flex flex-row lg:flex-col justify-center items-center'>
@@ -147,27 +166,30 @@ const WebcamComponent = ({ ocrText, setocrText }) => {
         <input type="file" accept='image/*' name='image' onChange={(e) => handleFileChange(e)} />
       </div>}
 
-      <div className=' flex  flex-col lg:flex-row items-center gap-2 '>
+      <div className=' grid grid-cols-1 lg:grid-cols-3 items-center gap-2 px-5'>
         {/* Render when camera is accessible */}
         {isCameraAccessible && type == "Scanner" && <div className=' flex flex-col justify-center gap-1 '>
-          <div className=' h-fit w-fit relative border-4 border-black rounded-md'>
-            <Webcam
-              screenshotFormat='image/jpeg'
-              videoConstraints={videoConstraints}
-              screenshotQuality={1}
-              ref={webcamRef}
-              onUserMedia={handleVideoStart}
-              onUserMediaError={handleVideoStop}
-            />
-            <div className=' absolute bottom-0 bg-gray-800 w-full opacity-50 p-1'>
+          <div className=' max-h-[664px] w-fit relative border-4 border-gray-300 rounded-md'>
+            <div className=' max-h-[664px]  overflow-hidden'>
+              <Webcam
+                screenshotFormat='image/jpeg'
+                videoConstraints={videoConstraints}
+                screenshotQuality={1}
+                ref={webcamRef}
+                onUserMedia={handleVideoStart}
+                onUserMediaError={handleVideoStop}
+                className=''
+              />
+            </div>
+            <div className=' absolute bottom-0 bg-gray-800 w-full opacity-75 p-1'>
               <div className=' flex justify-center items-center relative '>
                 <div className=' group  top-3 right-3  text-blue-500 flex flex-row lg:flex-col justify-center items-center'>
-                  <button className=' text-gray-100 text-4xl lg:text-6xl hover:opacity-90 outline-none' onClick={captureImg}><FaCamera /></button>
+                  <button className=' text-gray-100 text-4xl lg:text-6xl hover:opacity-90 hover:text-gray-300 transition-all duration-300 ease-in outline-none' onClick={captureImg}><FaCamera /></button>
                   <span className='absolute top-16 opacity-0 group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[12px] shadow-md shadow-black h-fit text-white'>Capture Image</span>
                 </div>
 
                 <div className=' group top-3 right-3 text-blue-500 flex flex-row lg:flex-col justify-center items-center'>
-                  <button className=' text-gray-100 text-4xl lg:text-5xl absolute right-3 lg:right-5 hover:opacity-90 outline-none' onClick={switchCamera}><RiCameraSwitchFill /></button>
+                  <button className=' text-gray-100 text-4xl lg:text-5xl absolute right-3 lg:right-5 hover:opacity-90 hover:text-gray-300 transition-all duration-300 ease-in outline-none' onClick={switchCamera}><RiCameraSwitchFill /></button>
                   <span className='absolute top-16 right-2  opacity-0 group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[12px] shadow-md shadow-black h-fit text-white'>Switch Camera</span>
                 </div>
               </div>
@@ -184,11 +206,13 @@ const WebcamComponent = ({ ocrText, setocrText }) => {
         }
 
         {/* Actual Image given by user */}
-        {screenshot && <div className=' flex flex-col justify-center items-center gap-5 '>
-          <div className=' relative w-fit h-fit border-4 border-black rounded-md  sm:max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg max-h-[650px]'>
-            <img src={screenshot} alt="image" className=' h-[650px] w-[550px] ' />
+        {screenshot && <div className='  flex flex-col justify-center items-center gap-5 '>
+          <div className=' relative border-4 border-gray-300 rounded-md w-fit max-h-[664px]'>
+            <div className=' max-h-[664px] overflow-hidden'>
+              <img src={screenshot} alt="image" className=' w-[550px] ' />
+            </div>
             <div className=' group absolute bottom-0 flex justify-center text-white w-full'>
-              <button className=' text-center w-full p-2 bg-gray-800 text-xl font-semibold border-4 flex justify-center items-center gap-2 border-black hover:text-[22px] outline-none' onClick={() => extractText(screenshot, 1)}>Extract Text {loading && state == 1 && <span className=' border-l-2 border-b-2 animate-spin block border-white rounded-full h-5 w-5'></span>} </button>
+              <button className=' text-center w-full p-2 bg-gray-800 text-xl font-semibold border-t-4 flex justify-center items-center gap-2 border-gray-300 hover:text-[22px] outline-none' onClick={() => extractText(screenshot, 1)}>Extract Text {loading && state == 1 && <span className=' border-l-2 border-b-2 animate-spin block border-white rounded-full h-5 w-5'></span>} </button>
               <span className='absolute top-12  opacity-0 group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white'>Extract Text</span>
             </div>
             <div className=' group absolute top-3 right-3 text-blue-500 flex flex-row lg:flex-col justify-center items-center'>
@@ -200,10 +224,12 @@ const WebcamComponent = ({ ocrText, setocrText }) => {
 
         {/* Better Quality Image */}
         {qualityImg && <div className=' flex flex-col justify-center items-center gap-5 '>
-          <div className=' relative w-fit h-fit border-4 border-black rounded-md'>
-            <img src={qualityImg} alt="image" />
+          <div className=' relative border-4 border-gray-300 rounded-md w-fit max-h-[664px]'>
+            <div className=' max-h-[664px] overflow-hidden'>
+              <img src={qualityImg} alt="image" className=' w-[550px]' />
+            </div>
             <div className=' group absolute bottom-0 flex justify-center text-white w-full'>
-              <button className=' text-center w-full p-2 bg-gray-800 text-xl font-semibold border-4 flex justify-center items-center gap-2 border-black hover:text-[22px] outline-none' onClick={() => extractText(qualityImg, 2)}>Extract Text {loading && state == 2 && <span className=' border-l-2 border-b-2 animate-spin block border-white rounded-full h-5 w-5'></span>} </button>
+              <button className=' text-center w-full p-2 bg-gray-800 text-xl font-semibold border-t-4 flex justify-center items-center gap-2 border-gray-300 hover:text-[22px] outline-none' onClick={() => extractText(qualityImg, 2)}>Extract Text {loading && state == 2 && <span className=' border-l-2 border-b-2 animate-spin block border-white rounded-full h-5 w-5'></span>} </button>
               <span className='absolute top-12  opacity-0 group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white'>Extract Text</span>
             </div>
             <div className=' group absolute top-3 right-3  text-blue-500 flex flex-row lg:flex-col justify-center items-center'>
@@ -212,17 +238,15 @@ const WebcamComponent = ({ ocrText, setocrText }) => {
             </div>
           </div>
         </div>}
-
-        {/* Extracted Text */}
-        {ocrText && <div className=' p-2 lg:w-[20%]'>
-          <h1 className=' text-xl font-semibold text-center'>Text </h1>
-          <p className=' pt-2 font-semibold'>
-            {ocrText}
-          </p>
-        </div>}
       </div>
 
-
+      {/* Extracted Text */}
+      {ocrText && <div className=' p-2 flex flex-col justify-center items-center py-10'>
+        <h1 className=' text-2xl font-semibold text-center underline'>Text </h1>
+        <p className=' pt-2 font-semibold'>
+          {ocrText}
+        </p>
+      </div>}
     </div>
   )
 }
