@@ -128,7 +128,7 @@ const WebcamComponent = ({ ocrText, setocrText, setimageInfo }) => {
     if (imageUrl) {
       const link = document.createElement("a");
       link.href = imageUrl;
-      link.download = "image.png";
+      link.download = "image.jpeg";
       link.click();
       toast.success("Image downloaded successfully!")
     } else {
@@ -168,7 +168,7 @@ const WebcamComponent = ({ ocrText, setocrText, setimageInfo }) => {
 
       <div className=' grid grid-cols-1 lg:grid-cols-3 items-center gap-2 px-5'>
         {/* Render when camera is accessible */}
-        {isCameraAccessible && type == "Scanner" && <div className=' flex flex-col justify-center gap-1 '>
+        {isCameraAccessible && type == "Scanner" && <div className=' flex flex-col justify-center items-center gap-1 '>
           <div className=' max-h-[664px] w-fit relative border-4 border-gray-300 rounded-md'>
             <div className=' max-h-[664px]  overflow-hidden'>
               <Webcam

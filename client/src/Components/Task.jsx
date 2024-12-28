@@ -12,7 +12,7 @@ const Task = ({ ocrText, imageInfo, setimageInfo }) => {
     const targetRef = useRef(null)
     const [state, setstate] = useState();
     const [path, setpath] = useState([]);
-    let targetArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+    let targetArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22];
 
     const addNumbers = async () => {
         try {
@@ -67,22 +67,36 @@ const Task = ({ ocrText, imageInfo, setimageInfo }) => {
     const editImage = async (e) => {
         try {
             e.preventDefault();
+            toast.dismiss();
+
+            if (!imageInfo.height || !imageInfo.width || !imageInfo.quality) {
+                toast.error("Please provide all required field!")
+            }
+
             if (imageInfo.quality < 20 || imageInfo.quality > 100) {
-                toast.success("Quality should be greater than 20 and less than 100!")
+                toast.error("Quality should be greater than 20 and less than 100!");
+                return;
+            }
+
+            if (imageInfo.height <= 50 || imageInfo.width <= 50) {
+                toast.error("Height and width should be greater than 50!")
+                return;
             }
 
             const { data } = await axios.post(`${import.meta.env.VITE_SERVER_URL}/edit-image`, { height: imageInfo.height, width: imageInfo.width, quality: 50, image: imageInfo.image });
-            console.log(data);
 
             if (data.path) {
                 const link = document.createElement("a");
                 link.href = data.path;
-                link.download = "compressed-image.jpg";
+                link.download = "compressedImage.jpeg";
+                link.target = '_tab'
+                link.style.display = 'none'; // Hide the element
+                document.body.appendChild(link);
                 link.click();
-                console.log("downloaded!")
+                document.body.removeChild(link)
             }
         } catch (error) {
-            console.log(error)
+            toast.error(error.response.data.message || "Something is wrong!")
         }
     }
 
@@ -104,19 +118,19 @@ const Task = ({ ocrText, imageInfo, setimageInfo }) => {
                     <li className='relative group bg-green-500 w-fit p-1 rounded-md border-2 border-black' onClick={addNumbers}>
                         <div className=' group bottom-0 flex justify-center w-full'>
                             <button className=' outline-none'>ADD ALL NUMBERS</button>
-                            <span className='absolute top-9  opacity-0 group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white'>Add All Numbers</span>
+                            <span className='absolute top-9  opacity-0 lg:group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white'>Add All Numbers</span>
                         </div>
                     </li>
                     <li className='relative bg-green-500 w-fit p-1 rounded-md border-2 border-black' onClick={() => setstate(2)}>
                         <div className=' group bottom-0 flex justify-center w-full'>
                             <button className=' outline-none'>EXTRACT TEXT</button>
-                            <span className='absolute top-9  opacity-0 group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white'>Extract text</span>
+                            <span className='absolute top-9  opacity-0 lg:group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white'>Extract text</span>
                         </div>
                     </li>
                     <li className='relative bg-green-500 w-fit p-1 rounded-md border-2 border-black' onClick={createPuzzle}>
                         <div className='  group bottom-0 flex justify-center w-full'>
                             <button className=' outline-none'>CREATE PUZZLE</button>
-                            <span className='absolute top-9  opacity-0 group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white'>Create puzzle</span>
+                            <span className='absolute top-9  opacity-0 lg:group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white'>Create puzzle</span>
                         </div>
                     </li>
                     <li>
@@ -126,11 +140,12 @@ const Task = ({ ocrText, imageInfo, setimageInfo }) => {
                                     <option value={i} key={i}>{i}</option>
                                 ))}
                             </select>
-                            <span className='absolute top-9  opacity-0 group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white w-20 text-center'>No. Of Row</span>
+                            <span className='absolute top-9 left-0 opacity-0 lg:group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white w-20 text-center'>No. Of Row</span>
                         </div>
                     </li>
-                    <li className=' relative bg-green-500 w-fit p-1 rounded-md border-2 border-black' onClick={() => setstate(4)}>
+                    <li className='group relative bg-green-500 w-fit p-1 rounded-md border-2 border-black' onClick={() => setstate(4)}>
                         <button>Edit Image</button>
+                        <span className='absolute top-9 left-0 opacity-0 lg:group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white w-20 text-center'>Edit Image</span>
                     </li>
                 </ul>
             </div>
@@ -190,7 +205,7 @@ const Task = ({ ocrText, imageInfo, setimageInfo }) => {
 
                                 <div className=' relative group bottom-0 flex justify-center w-full'>
                                     <button className=' bg-blue-500 p-1 rounded-md text-lg lg:text-xl font-semibold outline-none w-fit' onClick={searchWord}>Search</button>
-                                    <span className='absolute top-9 opacity-0 group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white'>Search word</span>
+                                    <span className='absolute top-9 opacity-0 lg:group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white'>Search word</span>
                                 </div>
                             </div>
                         </div>
@@ -199,7 +214,7 @@ const Task = ({ ocrText, imageInfo, setimageInfo }) => {
                 </div>
             </div>}
             {state == 4 && <div className=' p-3 flex flex-col justify-center items-center'>
-                <h1 className=' text-2xl font-semibold text-center underline pb-5 flex flex-col justify-center items-center'>Edit Image</h1>
+                <h1 className=' text-2xl font-semibold text-center underline pb-5 flex flex-col justify-center items-center outline-none'>Edit Image</h1>
                 <form>
                     <div className=' flex flex-col lg:flex-row justify-between gap-2'>
                         <div className=' flex flex-row gap-3 lg:gap-0 lg:flex-col w-fit'>
@@ -215,8 +230,11 @@ const Task = ({ ocrText, imageInfo, setimageInfo }) => {
                             <input type="number" placeholder='Quality(%)' name="quality" id="quality" className=' outline-none border-2 border-gray-500 rounded-md p-[2px] px-2 text-black w-32' onChange={handleChange} value={imageInfo.quality} />
                         </div>
                     </div>
-                    <div className=' py-2 flex justify-center'>
-                        <button className=' p-1 px-3 text-black bg-blue-500 rounded-md font-semibold' onClick={editImage}>EDIT</button>
+                    <div className='group relative py-2 flex justify-center'>
+                        <button className=' p-1 px-3 text-black bg-blue-500 rounded-md font-semibold flex justify-center items-center' onClick={editImage}>
+                            <span>EDIT</span>
+                        </button>
+                        <span className='absolute top-9 opacity-0 lg:group-hover:opacity-100 bg-black p-1 m-[2px] order-1 lg:order-2 font-semibold transition-all duration-300 ease-in z-40 text-[14px] shadow-md shadow-black h-fit text-white w-20 text-center'>Edit Image</span>
                     </div>
                 </form>
             </div>}

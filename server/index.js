@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
 import wordExtract, { enhanceQuality } from "./tesseract.js";
 import {
   createPuzzle,
@@ -14,6 +16,10 @@ app.use(cors());
 
 app.use(express.json({ limit: "10mb" }));
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.post("/enhance-image", enhanceQuality);
 app.post("/extract-text", wordExtract);
 app.post("/add-all-numbers", sumOfNumbers);
