@@ -167,7 +167,7 @@ export const editImage = async (req, res) => {
       .toFile(outputFilePath);
 
     if (fs.existsSync(outputFilePath)) {
-      const imageUrl = `http://localhost:3000/uploads/image.jpeg`;
+      const imageUrl = `${process.env.SERVER_URL}/uploads/image.jpeg`;
       return res.status(200).json({
         message: "File path sent successfully!",
         path: imageUrl,
